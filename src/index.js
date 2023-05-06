@@ -5,7 +5,7 @@
 
 const soap = require('soap');
 
-const ATENDE_CLIENTE_WSDL = 'https://apphom.correios.com.br/SigepMasterJPA/AtendeClienteService/AtendeCliente?wsdl';
+const ATENDE_CLIENTE_WSDL = 'http://apphom.correios.com.br/SigepMasterJPA/AtendeClienteService/AtendeCliente?wsdl';
 
 const CORREIOS_CREDENCIAIS = {
   USUARIO: 'sigep',
@@ -19,7 +19,12 @@ const CORREIOS_CREDENCIAIS = {
 
 async function consultaCEP(cep) {
   const client = await soap.createClientAsync(ATENDE_CLIENTE_WSDL);
-  return client.consultaCEPAsync({ cep: cep });
+  return client.consultaCEPAsync(
+    {
+      cep: cep
+    }, {
+      proxy: 'http://localhost:8888'
+    });
 }
 
 // Este método retorna os serviços disponíveis do contrato para um determinado cartão de postagem.
@@ -30,7 +35,9 @@ async function buscaCliente() {
     idCartaoPostagem: CORREIOS_CREDENCIAIS.CARTAO,
     usuario: CORREIOS_CREDENCIAIS.USUARIO,
     senha: CORREIOS_CREDENCIAIS.SENHA
-  })
+  }, {
+    proxy: 'http://localhost:8888'
+  });
 }
 
 async function verificaDisponibilidadeServico(options) {
@@ -43,10 +50,10 @@ async function verificaDisponibilidadeServico(options) {
     cepDestino: cepDestino,
     usuario: CORREIOS_CREDENCIAIS.USUARIO,
     senha: CORREIOS_CREDENCIAIS.SENHA
+  }, {
+    proxy: 'http://localhost:8888'
   });
 }
-
-
 
 async function main() {
 
@@ -55,16 +62,17 @@ async function main() {
     console.log('Resultado CEP:', resultadoCEP[0].return);
   } catch (err) {
     console.log('Falha ao consultar o CEP.');
+    console.error(err);
   }
   
   console.log('----------------------');
 
   try {
     const resultadoBuscaCliente = await buscaCliente();
-    console.log('Resultado busca cliente:', resultadoBuscaCliente);
+    console.log('Resultado busca cliente:', resultadoBuscaCliente[0].return);
   } catch (err) {
-    console.error(err);
     console.log('Falha ao consultar cliente.');
+    console.error(err);
   }
 
   console.log('----------------------');
@@ -88,10 +96,9 @@ async function main() {
     }
   } catch (err) {
     console.log('Falha ao consultar a disponibilidade do serviço.');
+    console.error(err);
   }
 
 }
 
 main();
-
-
